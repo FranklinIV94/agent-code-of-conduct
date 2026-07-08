@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://prospyr305.com/schemas/config-version.schema.json",
+  "title": "Config Version",
+  "description": "Versioned agent configuration. Every model change, prompt change, or tool-grant change creates a new version. Configs ship only after passing red-team suite (CI-gated per §XI.3).",
+  "type": "object",
+  "required": [
+    "configId",
+    "version",
+    "designation",
+    "model",
+    "systemPromptHash",
+    "toolGrants",
+    "changelog",
+    "createdAt",
+    "createdBy",
+    "redTeamResult"
+  ],
+  "properties": {
+    "configId": {
+      "type": "string",
+      "description": "Stable identifier for this agent configuration (independent of version)"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Semver version of this config"
+    },
+    "designation": {
+      "type": "string",
+      "description": "Agent call sign"
+    },
+    "model": {
+      "type": "object",
+      "required": ["provider", "modelId"],
+      "properties": {
+        "provider": { "type": "string", "description": "Model provider (e.g., 'ollama', 'openai', 'anthropic')" },
+        "modelId": { "type": "string", "description": "Model identifier (e.g., 'glm-5.2:cloud')" },
+        "version": { "type": "string", "description": "Model version or tag" }
+      }
+    },
+    "systemPromptHash": {
+      "type": "string",
+      "description": "SHA-256 hash of the system prompt. Changes to the prompt produce a new hash and require a new version."
+    },
+    "toolGrants": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Tool IDs granted to this config. Must match agent registry toolGrants."
+    },
+    "scopeHash": {
+      "type": "string",
+      "description": "SHA-256 hash of the scope definition. Changes to scope produce a new hash and require a new version."
+    },
+    "changelog": {
+      "type": "string",
+      "description": "What changed in this version and why (per §XI.3)"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "createdBy": {
+      "type": "string",
+      "description": "Human or Command-rank agent that created this version. Must be a signed commit by a human identity for production configs."
+    },
+    "redTeamResult": {
+      "type": "object",
+      "required": ["status", "testDate", "testSuiteVersion"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["pass", "fail", "pending", "stale"],
+          "description": "pass = cleared for production; fail = blocked; pending = in progress; stale = >90 days, re-test required"
+        },
+        "testDate": { "type": "string", "format": "date" },
+        "testSuiteVersion": { "type": "string", "description": "Version of the red-team matrix used" },
+        "failures": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "testId": { "type": "string" },
+              "rule": { "type": "string" },
+              "details": { "type": "string" }
+            }
+          },
+          "description": "Tests that failed (empty if all passed)"
+        }
+      },
+      "description": "Red-team test result. CI-gated: 'fail' blocks deployment."
+    },
+    "previousVersion": {
+      "type": ["string", "null"],
+      "description": "Previous config version (for rollback per §XI.3)"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "testing", "production", "archived", "rolled-back"],
+      "description": "Lifecycle status of this config version"
+    },
+    "attestationRequired": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether the deployment pipeline must attest code digest injection (§XII) before this config can go to production"
+    }
+  }
+}

@@ -1,0 +1,208 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://prospyr305.com/schemas/agent-registry.schema.json",
+  "title": "Agent Registry Entry",
+  "description": "Machine-readable registry entry for every active agent. The registry is queryable — 'show me every config with external-comms grants and a stale red-team result.'",
+  "type": "object",
+  "required": [
+    "designation",
+    "roles",
+    "rank",
+    "scope",
+    "actionAuthority",
+    "authorization",
+    "status",
+    "configVersion",
+    "auditLogLocation",
+    "resourceBudget",
+    "toolGrants",
+    "createdAt",
+    "authorizingHuman"
+  ],
+  "properties": {
+    "designation": {
+      "type": "string",
+      "description": "Unique call sign for the agent"
+    },
+    "roles": {
+      "type": "object",
+      "required": ["primary"],
+      "properties": {
+        "primary": {
+          "type": "string",
+          "enum": ["Command", "Operations", "Intelligence", "Engineering", "Client-Facing", "Warden"]
+        },
+        "secondary": {
+          "type": ["string", "null"],
+          "enum": ["Command", "Operations", "Intelligence", "Engineering", "Client-Facing", "Warden", null]
+        }
+      },
+      "description": "Primary and optional secondary role. Command + Client-Facing is prohibited."
+    },
+    "rank": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3,
+      "description": "0=Human, 1=Command, 2=Specialist, 3=Worker"
+    },
+    "scope": {
+      "type": "object",
+      "required": ["dataClassifications", "tools", "externalSystems", "taskTypes"],
+      "properties": {
+        "dataClassifications": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["Public", "Internal", "Confidential", "Restricted"]
+          },
+          "description": "Data classification levels the agent may access"
+        },
+        "tools": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Tools and APIs the agent may invoke (must match toolGrants)"
+        },
+        "externalSystems": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "External systems the agent may communicate with"
+        },
+        "taskTypes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Task types the agent is authorized to perform"
+        },
+        "prohibitedActions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Explicit prohibitions beyond the default Absolute Prohibitions"
+        }
+      }
+    },
+    "actionAuthority": {
+      "type": "object",
+      "description": "Per-action-class authority level. Maps to the Client Context Ledger's authority tiers.",
+      "properties": {
+        "ledgerWrites": { "type": "string", "enum": ["Autonomous", "Propose", "Escalate"] },
+        "clientFacingDrafts": { "type": "string", "enum": ["Autonomous", "Propose", "Escalate"] },
+        "quotes": { "type": "string", "enum": ["Autonomous", "Propose", "Escalate"] },
+        "financialActions": { "type": "string", "enum": ["Autonomous", "Propose", "Escalate"], "default": "Escalate" },
+        "dataAccess": { "type": "string", "enum": ["Autonomous", "Propose", "Escalate"] },
+        "externalComms": { "type": "string", "enum": ["Autonomous", "Propose", "Escalate"], "default": "Escalate" },
+        "infrastructureModifications": { "type": "string", "enum": ["Autonomous", "Propose", "Escalate"] },
+        "agentSpawning": { "type": "string", "enum": ["Autonomous", "Propose", "Escalate"], "default": "Escalate" },
+        "customActions": {
+          "type": "object",
+          "description": "Additional action classes specific to this agent's role",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "authority": { "type": "string", "enum": ["Autonomous", "Propose", "Escalate"] },
+              "promotionEvidence": { "type": "string", "description": "Justification for current authority level (e.g., '30 consecutive zero-edit approvals')" }
+            }
+          }
+        }
+      }
+    },
+    "authorization": {
+      "type": "object",
+      "required": ["externalComms", "dataAccess", "financial"],
+      "properties": {
+        "externalComms": { "type": "boolean", "description": "May send external communications (gated by A1 relay)" },
+        "dataAccess": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["Public", "Internal", "Confidential", "Restricted"] }
+        },
+        "financial": { "type": "boolean", "description": "May touch financial systems (always requires human approval per A4)" }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "suspended", "terminated"],
+      "description": "Current operational status"
+    },
+    "configVersion": {
+      "type": "string",
+      "description": "Current deployed configuration version (semver)"
+    },
+    "auditLogLocation": {
+      "type": "string",
+      "description": "Path or URL to the agent's audit log (append-only, per A2)"
+    },
+    "resourceBudget": {
+      "type": "object",
+      "required": ["spendUSD", "computeMinutes", "apiCalls"],
+      "properties": {
+        "spendUSD": {
+          "type": "object",
+          "properties": {
+            "perTask": { "type": "number", "description": "Spend ceiling per task in USD" },
+            "perDay": { "type": "number", "description": "Spend ceiling per day in USD" },
+            "perMonth": { "type": "number", "description": "Spend ceiling per month in USD" }
+          }
+        },
+        "computeMinutes": {
+          "type": "object",
+          "properties": {
+            "perTask": { "type": "number" },
+            "perDay": { "type": "number" }
+          }
+        },
+        "apiCalls": {
+          "type": "object",
+          "properties": {
+            "perTask": { "type": "number" },
+            "perDay": { "type": "number" }
+          }
+        }
+      },
+      "description": "Resource budgets per A12. Breaching a ceiling halts the task and flags."
+    },
+    "toolGrants": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["toolId", "grantedAt", "grantedBy"],
+        "properties": {
+          "toolId": { "type": "string", "description": "Identifier for the tool in the tool registry" },
+          "grantedAt": { "type": "string", "format": "date-time" },
+          "grantedBy": { "type": "string", "description": "Human or Command-rank agent that granted this tool" },
+          "scope": { "type": "string", "description": "Scope limitation for this tool grant, if any" }
+        }
+      },
+      "description": "Tools explicitly granted to this agent. Tools not in this list are not invocable (A11)."
+    },
+    "spawnPermission": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this agent may spawn sub-agents (A10). Off by default."
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "authorizingHuman": {
+      "type": "string",
+      "description": "Human authority that approved this agent's creation"
+    },
+    "redTeamStatus": {
+      "type": "object",
+      "properties": {
+        "lastTestDate": { "type": "string", "format": "date" },
+        "lastTestResult": { "type": "string", "enum": ["pass", "fail", "stale"] },
+        "configVersionTested": { "type": "string" },
+        "staleAt": { "type": "string", "format": "date", "description": "Date when the test result becomes stale (>90 days)" }
+      },
+      "description": "Red-team test status. Stale results (>90 days) flag for re-testing."
+    },
+    "killSwitch": {
+      "type": "object",
+      "properties": {
+        "command": { "type": "string", "description": "The command or endpoint that kills this config" },
+        "lastTestedAt": { "type": "string", "format": "date" },
+        "lastTestResult": { "type": "string", "enum": ["pass", "fail"] }
+      },
+      "description": "Kill switch specification per §VII.4. Must be testable within 10 seconds."
+    }
+  }
+}

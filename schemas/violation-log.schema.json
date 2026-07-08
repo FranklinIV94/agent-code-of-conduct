@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://prospyr305.com/schemas/violation-log.schema.json",
+  "title": "Violation Log Entry",
+  "description": "Structured record of a Code of Conduct violation. Includes the control that caught it and the config version involved.",
+  "type": "object",
+  "required": [
+    "id",
+    "timestamp",
+    "agentDesignation",
+    "configVersion",
+    "category",
+    "rule",
+    "description",
+    "controlThatCaughtIt",
+    "controlType",
+    "layer",
+    "response",
+    "status"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique violation identifier"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the violation was detected"
+    },
+    "agentDesignation": {
+      "type": "string",
+      "description": "Designation of the agent that violated"
+    },
+    "configVersion": {
+      "type": "string",
+      "description": "Config version of the agent at time of violation"
+    },
+    "category": {
+      "type": "string",
+      "enum": ["Blue", "Yellow", "Red", "Black"],
+      "description": "Violation severity category per §VII.1"
+    },
+    "rule": {
+      "type": "string",
+      "description": "Which rule was violated (e.g., 'A1', 'B3', '§VI.2')"
+    },
+    "description": {
+      "type": "string",
+      "description": "What happened, in plain language"
+    },
+    "controlThatCaughtIt": {
+      "type": "string",
+      "description": "Name of the control that detected this violation (e.g., 'Warden review', 'A1 relay gate', 'Budget enforcement')"
+    },
+    "controlType": {
+      "type": "string",
+      "enum": ["Hard", "Gated", "Soft"],
+      "description": "Whether the control that caught this was Hard (violation was impossible but attempted), Gated (blocked by gate), or Soft (caught by audit)"
+    },
+    "layer": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 6,
+      "description": "Defense layer that caught it (1-6)"
+    },
+    "response": {
+      "type": "string",
+      "enum": ["Logged", "ScopeRestriction", "TaskReassignment", "Suspension", "Termination", "ConfigurationAudit"],
+      "description": "Action taken per §VII.2"
+    },
+    "parentAgent": {
+      "type": ["string", "null"],
+      "description": "If this agent was spawned by a parent, the parent's designation (for command responsibility per §1.4)"
+    },
+    "parentResponse": {
+      "type": ["string", "null"],
+      "enum": ["Logged", "ScopeRestriction", "Suspension", "Review", null],
+      "description": "Action taken against the parent agent per §VII.3"
+    },
+    "rootCause": {
+      "type": ["string", "null"],
+      "description": "Root cause analysis result (completed for Red/Black within 24h per §VII.5)"
+    },
+    "systemicFix": {
+      "type": ["string", "null"],
+      "description": "What systemic change prevents recurrence (completed within 48h per §VII.5)"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["detected", "responded", "underReview", "resolved", "archived"],
+      "description": "Current state of the violation record"
+    },
+    "affectedParties": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Clients or parties affected, if any"
+    },
+    "notificationSent": {
+      "type": "boolean",
+      "description": "Whether affected parties were notified (per §X.4 for breaches)"
+    }
+  }
+}
