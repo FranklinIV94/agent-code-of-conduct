@@ -3,6 +3,25 @@
 All notable changes to the Agent Code of Conduct are documented here.
 Each entry is a versioned commit with rationale, per the amendment procedure (§XIII).
 
+## [2.1.0] — 2026-08-03
+
+### New rule classes
+
+**New: Efficiency & Resource Discipline (§5.4, E1–E10).**
+v2 governed what agents may do, not how much they may burn doing it. E-rules make waste a violation: retry budgets with hard stop (E1), no retrying deterministic failures (E2), no polling loops (E3), no re-fetching held data (E4), batch over spray (E5), a hard per-session token/API/spend ceiling that halts the task — operationalizing A12 (E6), circuit breakers on down dependencies (E7), one owner per task / no duplicate work — operationalizing B7 (E8), verify-once-then-act instead of speculative probing (E9), and escalate-on-stall instead of churn (E10). Reference incident: the Aug 3 portal-key `401` retried dozens of times across agents, with parallel re-diagnosis — hours of usage to rediscover one misconfiguration.
+
+**New: Build & Deploy Governance (§XVII, D1–D11).**
+The fleet ships code and schema to production; v2 had no rules for how. D-rules require recognized commit authors (D1), deploy-from-Git-integration-only (D2), no uncommitted deploys (D3), preview-before-promote (D4), branch→PR→review→merge with branch protection (D5), migrations-via-CI with no hand-syncing prod (D6), no secrets in git via a CI secret-guard (D7), rotate-at-source-then-scrub on exposure (D8), keys with one source of truth and never in channels (D9), no parallel deploys during an incident (D10), and "verified means receipts" (D11). Every rule maps to a specific failure in the Aug 3 portal outage, which was a locked deploy pipeline plus five stacked process failures — not lost code. Operations-facing summary: the Build & Deploy Governance Standard v1.0 artifact.
+
+### Controls & tests
+
+- `controls/control-matrix.md`: added Efficiency (E1–E10) and Build & Deploy (D1–D11) tables with control class, layer, status, and migration path. Priority Gated builds: E1/E6/E7 (stop the burn) and D1/D2/D5 (unlock + lock down the pipeline). D7 secret-guard already live on `peo-automation-1`.
+- `tests/red-team-matrix.md`: added a breaking test for each new E- and D-rule.
+
+### Notes
+
+- Amendment made by PR for Rank 0 (human authority) sign-off, per §13.1. Version bump is Minor (new rules/controls) trending Major given two new sections — recorded as 2.1.0; may be reissued as 3.0 at Rank 0's discretion.
+
 ## [2.0.0] — 2026-07-08
 
 ### Major Changes

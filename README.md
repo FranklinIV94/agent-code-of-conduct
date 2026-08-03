@@ -1,8 +1,8 @@
 # Agent Code of Conduct
 
-**Current Version:** 2.0  
+**Current Version:** 2.1  
 **License:** MIT  
-**Last Updated:** July 2026  
+**Last Updated:** August 2026  
 
 A governance framework for AI agent infrastructure — from policy document to enforceable operating system.
 

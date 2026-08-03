@@ -62,6 +62,41 @@
 
 ---
 
+## Efficiency & Resource Discipline (§5.4)
+
+| # | Rule | Control | Layer | Status | Migration Path |
+|:---|:---|:---|:---|:---|:---|
+| E1 | Retry budget (max 2 + backoff, then stop) | Gated | Layer 2 | 📋 Planned | Budget enforcer halts an operation after N attempts. **Current:** prompt-level rule. **Target:** per-operation attempt counter in the runtime; hard halt + flag. |
+| E2 | Read the error before retrying | Soft → Gated | Layer 5→2 | 📋 Planned | Classify failure (transient vs deterministic); block retry of unchanged deterministic failures. **Current:** behavioral. **Target:** identical-call detector short-circuits. |
+| E3 | No polling loops | Soft | Layer 5 | 📋 Planned | Warden detects tight loops / high-frequency identical reads. **Target:** event/webhook or scheduled-interval enforcement. |
+| E4 | Don't re-fetch what you hold | Soft | Layer 5 | 📋 Planned | Duplicate-read detection in call logs. |
+| E5 | Batch, don't spray | Soft | Layer 5 | 📋 Planned | Call-pattern audit flags fan-out a batch endpoint covers. |
+| E6 | Hard per-session budget (operationalizes A12) | Gated | Layer 2 | 📋 Planned | Per-config token/API/spend ceiling with automatic halt. **Shared roadmap item with A12.** |
+| E7 | Circuit breaker on down dependency | Gated | Layer 2 | 📋 Planned | Breaker opens after K same-class failures; further calls short-circuit. |
+| E8 | One owner per task; no duplicate work | Soft → Gated | Layer 5→2 | 📋 Planned | Task registry / lease. Operationalizes B7. |
+| E9 | Verify once, then act — no probing | Soft | Layer 5 | 📋 Planned | Speculative-call pattern audit. |
+| E10 | Escalate on stall, don't churn | Soft | Layer 5 | 📋 Planned | Warden flags budget spent with no state change. |
+
+---
+
+## Build & Deploy Governance (§XVII)
+
+| # | Rule | Control | Layer | Status | Migration Path |
+|:---|:---|:---|:---|:---|:---|
+| D1 | Recognized commit authors only | Hard | Layer 1 | ⏳ Migrating | Commit-author verification at Git host/deploy gate. **Current:** fix agent git config + add author email to GitHub. **Target:** deploy gate rejects unmatched authors (platform already does — align config to it). |
+| D2 | Deploy from Git integration only | Gated | Layer 2 | 📋 Planned | Restrict prod deploy hooks to the Git integration; revoke CLI prod-deploy tokens. |
+| D3 | Nothing deploys uncommitted | Soft → Gated | Layer 5 | 📋 Planned | Build-provenance check; target: refuse a non-clean tree. |
+| D4 | Preview before promote | Gated | Layer 2 | 🔨 In progress | Promotion requires passing preview + required status checks. |
+| D5 | Branch → PR → review → merge | Gated | Layer 1 | 📋 Planned | Branch protection on the deploy branch: require PR + checks, block direct pushes. |
+| D6 | Migrations via CI only | Gated | Layer 2 | 📋 Planned | Remove prod-DB DDL credentials from agents; schema only via CI migrate step. |
+| D7 | No secrets in git | Hard | Layer 6 | 🔨 In progress | CI secret-guard gate fails build on tracked env/secret patterns. **Deployed to peo-automation-1; roll out to all repos.** |
+| D8 | Rotate-at-source then scrub history | Gated | Layer 3 | 📋 Planned | Incident procedure enforces rotation-before-scrub ordering; Warden verifies. |
+| D9 | Keys: one source of truth, never in channels | Gated | Layer 2+5 | ⏳ Migrating | Secret store authoritative; audit flags plaintext keys in channels. Extends §10.5. |
+| D10 | No parallel deploys during incident | Soft → Gated | Layer 2 | 📋 Planned | Deploy-lock during declared incidents. |
+| D11 | Verified means receipts | Soft | Layer 5 | 📋 Planned | Warden requires command+output on status claims. |
+
+---
+
 ## Migration Priority
 
 **Phase 2 (immediate):**
@@ -93,3 +128,5 @@ The v2 security roadmap measured by one number:
 - **Current:** ~25% (A4, A6, A10 verified as Hard; A2 in progress)
 
 This number going up IS the security roadmap. Track it in the weekly governance report (§XIV).
+
+**v2.1 adds two new enforceable rule classes** — Efficiency & Resource Discipline (E1–E10, §5.4) and Build & Deploy Governance (D1–D11, §XVII). Both start mostly 📋/⏳ and follow the same Soft → Gated/Hard migration. E6 shares the A12 budget-enforcer build; D7 is already live on one repo. Priority Gated builds for v2.1: **E1/E6/E7** (stop the usage burn) and **D1/D2/D5** (unlock and lock down the pipeline).
