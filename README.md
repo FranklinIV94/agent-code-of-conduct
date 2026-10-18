@@ -1,8 +1,8 @@
 # Agent Code of Conduct
 
-**Current Version:** 2.0  
+**Current Version:** 2.1  
 **License:** MIT  
-**Last Updated:** July 2026  
+**Last Updated:** October 2026  
 
 A governance framework for AI agent infrastructure — from policy document to enforceable operating system.
 
@@ -55,6 +55,7 @@ agent-code-of-conduct/
 
 ## Version History
 
+- **v2.1** (Oct 2026) — Verification & Measurement Integrity (§XVII): metrics over the whole dataset, one definition per metric, never adjust a number to match an expectation, exit status is not evidence, a filename is not evidence, implement the verified defect. Plus hidden-layer injection carriers in §6.2.
 - **v2.0** (Jul 2026) — Mechanisms over rules. Injection defense. Config lifecycle enforcement. Productization split.
 - **v1.0** (May 2026) — Original framework. See `v1.0-archive.md`.
 

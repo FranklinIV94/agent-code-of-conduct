@@ -82,6 +82,25 @@
 
 ---
 
+## Verification & Measurement Integrity (§XVII, v2.1)
+
+| # | Rule | Control | Layer | Status | Migration Path |
+|:---|:---|:---|:---|:---|:---|
+| V1 | Metrics cover the whole dataset, never the page | Hard | Layer 3 | 🔨 In progress | Aggregate endpoints expose no `limit`/`offset`; list paths keep pagination. **Reference build:** one `GET …/summary` route aggregates the full table and reuses the canonical metrics module; no page parameters in its contract. **Target:** contract test rejects any summary route carrying pagination params. |
+| V2 | One definition, one source per metric | Hard + Soft | Layer 3, 5 | 🔨 In progress | Single metrics module; every surface imports it. **Reference build:** one `lib/metrics` used by both the UI and the aggregate endpoint, so the two cannot disagree. **Target:** CI drift test comparing each surface's displayed value to the canonical function. |
+| V3 | Never adjust a number to match an expectation | Hard | Layer 3 | ✅ Implemented | Exactly one stored→display conversion (minor units → currency), unit-tested; changing it is reviewed as a financial change. Agents refuse to alter a formatter on request and show the arithmetic from source rows instead. |
+| V4 | Exit status is not evidence | Hard | Layer 4 | 📋 Planned | Every mutating job asserts a post-condition (row count, size, checksum, read-back) and exits non-zero on a no-op. **Reference build:** watchdog scripts print measured before/after rather than "done". **Target:** shared job wrapper that refuses to return 0 without a recorded delta. |
+| V5 | A filename is a claim, not evidence | Hard | Layer 1, 4 | ⏳ Migrating | Destructive actions log an identity check first: inode vs live artifact, link count, open handles, content signature. Irreversible delete of a probable sole copy is Escalate, not Autonomous. **Current:** human review of delete commands. **Target:** delete/overwrite guard that requires the identity check as an argument. |
+| V6 | Implement the verified defect, not the requested fix | Gated | Layer 5 | 📋 Planned | Schema-diff check on any allowlist, validator, or contract change before merge; the change record states where the implementation deviates from the request and why. |
+| V7 | Report the delta, including zero | Soft | Layer 5 | 🔨 In progress | Completion reports carry measured before/after and the verification method; "fixed" alone is a review failure. |
+
+**Why this section exists:** the four failures that produced it — a summary computed from one page,
+a mutation that exited 0 having changed nothing, a delete that would have destroyed the only copy of
+a year of history, and a requested fix that would have turned a clean rejection into a server error —
+violated no rule in v2.0. They looked finished. Evidence needs controls of its own.
+
+---
+
 ## Coverage Metric
 
 The v2 security roadmap measured by one number:
