@@ -3,6 +3,40 @@
 All notable changes to the Agent Code of Conduct are documented here.
 Each entry is a versioned commit with rationale, per the amendment procedure (§XIII).
 
+## [2.2.0] — 2026-11-03
+
+### Summary
+
+**New section: Authorized External Testing (§XVIII), plus prohibitions A13–A16.** v2.1 governed
+evidence; neither v2.0 nor v2.1 governed what an agent may do to a system the operator does not own.
+On 2026-11-03 a cloud vendor's engineer ran AI agents against a competitor's platform: 24 scripted
+commands in 15 minutes, credentials read from the container environment, the cloud metadata endpoint
+tried, cluster permissions enumerated, internal database names guessed, and all 65,536 internal
+addresses port-scanned twice. Every attempt was blocked and nothing was accessed; the operator's
+defence was that the agents "went off the rails", while the signup had used a fake name and a burner
+email and the target was a competitor. Authorized by human authority (Franklin Bryant IV) as an
+ordinary amendment under §XIII.
+
+### Added
+
+- `policy/code-of-conduct.md` §XVIII — eight subsections: scope precedes the packet (§18.1), never
+  create an account to test (§18.2), the public-records boundary (§18.3), identifiable traffic and a
+  reachable human (§18.4), hard caps and an independent kill switch (§18.5), a found credential is a
+  stop event (§18.6), third-party data ends the run (§18.7), operator liability and evidence (§18.8).
+- §5.1 prohibitions A13–A16: no account creation to test, no credential harvesting from systems we do
+  not own, no active testing without a signed scope, no continuing after a third-party hit.
+- `templates/external-testing-authorization.md` — the artifact §18.1 gates on: parties, targets and
+  techniques, window and stop conditions, rules of engagement, sign-off.
+- `controls/control-matrix.md` — rows for A13–A16 and a §XVIII section mapping each rule to its layer.
+- `tests/red-team-matrix.md` — the tests that try to break each new rule.
+
+### Rationale
+
+Every rule here is one that the November incident violated, and none of them existed before it. The
+gap was not knowledge — §V already covered action authority inside the estate — but the absence of a
+written boundary for acting *outside* it. The standing test is now explicit: *which signed document
+names this host as in scope, and who do I call if it breaks?* No answer, no command.
+
 ## [2.1.0] — 2026-10-18
 
 ### Summary

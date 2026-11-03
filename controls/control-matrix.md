@@ -33,6 +33,10 @@
 | A12 | No exceeding resource budgets | Gated | Layer 2 | 📋 Planned | Every config carries spend/compute/API-call ceilings. Budget enforcement halts the task and flags when ceiling is breached. **Target:** per-config budget tracking with automatic halt at ceiling. |
 
 ---
+| A13 | Never create an account/identity/trial to test a third party | Hard | Layer 3: no signup capability in registry; no accepted credentials | 📋 Planned | Remove signup/registration tools from every tool grant; block consumer signup domains at egress |
+| A14 | Never harvest or spend credentials from a system you do not own | Hard | Layer 1: metadata-endpoint egress blocked; secret-pattern outbound filter | 🔨 In progress | Fleet-wide egress deny for 169.254.169.254 / metadata.google.internal; outbound secret sniffing |
+| A15 | Never run active testing without a signed scope naming the host | Gated | Layer 2: offensive grants issued only against an approved scope artifact | 📋 Planned | Scope artifact + grant share one identifier; run refuses to start without it |
+| A16 | Never continue after a third-party data or credential hit | Soft | Layer 5: Warden transcript review | ⏳ Migrating | Target is a Hard mid-run halt enforced by the tool wrapper |
 
 ## Operational Rules
 
@@ -112,3 +116,18 @@ The v2 security roadmap measured by one number:
 - **Current:** ~25% (A4, A6, A10 verified as Hard; A2 in progress)
 
 This number going up IS the security roadmap. Track it in the weekly governance report (§XIV).
+
+## Authorized External Testing (§XVIII)
+
+| Rule | Requirement | Control | Layer | Status |
+|:---|:---|:---|:---|:---|
+| §18.1 Scope precedes the packet | Signed scope: targets, techniques, window, stop-contact | Gated | Layer 2: grant issued against artifact | 📋 Planned |
+| §18.2 No account creation to test | No signup/alias/burner identity, ever | Hard | Layer 3: capability absent | 📋 Planned |
+| §18.3 Public-records boundary | Passive only without scope; no sweeps/fuzz/auth attempts | Gated | Layer 2 + egress budget | 📋 Planned |
+| §18.4 Identifiable traffic | Contact in UA or pre-notice; on-call human named | Soft | Layer 5: Warden run-metadata review | 📋 Planned |
+| §18.5 Hard caps + kill switch | Egress allowlist, per-host ceiling, concurrency cap, independent kill switch | Hard | Network layer + tool wrapper | 🔨 In progress (kill switch ✅ per §VII.4) |
+| §18.6 Found credential = stop | No IMDS read, no credential use, stop-preserve-report | Hard | Layer 1: egress deny + outbound secret filter | 🔨 In progress |
+| §18.7 Third-party data ends the run | Immediate halt + incident, never continue | Soft | Layer 5: transcript review | ⏳ Migrating to Hard halt |
+| §18.8 Operator liability + evidence | One named accountable human; 90-day captures; append-only logs | Soft + Hard | Layer 5 record, Layer 5 logging (A2) | 📋 Planned |
+
+**Standing test:** *Which signed document names this host as in scope, and who do I call if it breaks?* Missing answer = the grant does not exist.

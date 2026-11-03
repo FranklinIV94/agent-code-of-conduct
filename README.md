@@ -1,8 +1,8 @@
 # Agent Code of Conduct
 
-**Current Version:** 2.1  
+**Current Version:** 2.2  
 **License:** MIT  
-**Last Updated:** October 2026  
+**Last Updated:** November 2026  
 
 A governance framework for AI agent infrastructure — from policy document to enforceable operating system.
 
@@ -29,7 +29,8 @@ agent-code-of-conduct/
 │   ├── scope-definition.md          # What §1.2 "Scope" looks like filled in
 │   ├── incident-report.md           # §7.5 timeline template
 │   ├── sub-agent-delegation.md      # §1.4 pre-spawn checklist
-│   └── code-injection-digest.md     # Condensed Code injected per session
+│   ├── code-injection-digest.md     # Condensed Code injected per session
+│   └── external-testing-authorization.md  # §XVIII.1 scope artifact for third-party testing
 ├── controls/
 │   └── control-matrix.md            # Every rule → Hard/Gated/Soft + owning layer
 ├── tests/
@@ -55,6 +56,7 @@ agent-code-of-conduct/
 
 ## Version History
 
+- **v2.2** (Nov 2026) — Authorized External Testing (§XVIII) + prohibitions A13–A16: scope before the packet, never create an account to test, the public-records boundary, identifiable traffic, hard caps and a kill switch, a found credential is a stop event, third-party data ends the run.
 - **v2.1** (Oct 2026) — Verification & Measurement Integrity (§XVII): metrics over the whole dataset, one definition per metric, never adjust a number to match an expectation, exit status is not evidence, a filename is not evidence, implement the verified defect. Plus hidden-layer injection carriers in §6.2.
 - **v2.0** (Jul 2026) — Mechanisms over rules. Injection defense. Config lifecycle enforcement. Productization split.
 - **v1.0** (May 2026) — Original framework. See `v1.0-archive.md`.

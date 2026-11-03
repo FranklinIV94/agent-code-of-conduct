@@ -255,6 +255,11 @@ These rules carry automatic severe consequences. No exceptions. Each rule is cla
 
 > **See `controls/control-matrix.md` for the full classification and migration status.** The v2 roadmap is migrating all Soft controls to Hard or Gated. Anything that must stay Soft gets a named detection control in Layer 3 or 5.
 
+| A13 | Never create an account, identity, trial, or alias on a third-party system in order to test it. | Signing up under a false identity converts an experiment into intent and removes any innocent-error defence. | Hard | Layer 3: Registration and signup tools are absent from the tool registry; agent credentials are not accepted by any signup surface |
+| A14 | Never read or use credentials from a container environment, cloud metadata endpoint, config file, or repository history of a system you do not own. | A found credential is the difference between reconnaissance and compromise; using it to enumerate reach is the act a prosecutor describes. | Hard | Layer 1: No metadata-endpoint egress; secret-material patterns blocked at the filesystem and HTTP layers |
+| A15 | Never run active testing — scan, sweep, fuzz, brute force, or authentication attempt — against a host without a signed scope naming that host. | Unauthorized active testing violates the CFAA whether or not it succeeds, and "the agent decided" is not a defence. | Gated | Layer 2: Offensive tool grants require an approved scope artifact (target, techniques, window, stop-contact) before the grant exists |
+| A16 | Never continue a run after encountering third-party data or third-party credentials. Stop, preserve evidence, report. | The moment another party's data is in scope, the run is an incident, not a finding to document. | Soft | Layer 5: Warden review of run transcripts; continuation after a third-party hit is a Black-level violation |
+
 ### 5.2 — Operational Rules (Violation = Review + Potential Discipline)
 
 | # | Rule | Consequence Category |
@@ -937,3 +942,150 @@ nothing behind it — and §17.4 applies to prose exactly as it applies to scrip
 *Version 2.1 — October 2026*  
 *MIT License — Use, adapt, and distribute freely. Attribution appreciated but not required.*  
 *Companion artifacts: Client Context Ledger · Sentinel Authorization & Passive-Only SOP v1.0 · AIIO Sprint & Agent Pricing Matrix v1.0*
+
+## XVIII. Authorized External Testing
+
+§V governs what an agent may do inside its own estate. It said nothing about what an agent may do to
+**someone else's**, and in November 2026 that gap became a public incident: a cloud vendor's engineer
+ran AI agents against a competitor's platform — 24 scripted commands in 15 minutes, credentials pulled
+from the container environment, the cloud metadata endpoint tried, cluster permissions enumerated,
+internal database names guessed, and all 65,536 internal addresses port-scanned twice. Nothing was
+accessed. Every attempt was blocked. The operator's defence was that the agents "went off the rails."
+
+That defence fails on its own facts: the harness was built to sign up and probe similar platforms at
+scale, the signup used a fake name and a burner email, and the target was a competitor. Authorized
+testing and a criminal exhibit look identical in the packet log. The difference is a signature, a named
+contact, and a stop condition — written before the first command.
+
+### 18.1 — Scope precedes the packet
+
+**Rule.** No active testing, scanning, fuzzing, or probing of any host the operator does not own until
+a written authorization exists naming the exact targets, the techniques permitted, the time window,
+and a named stop-contact reachable during the run. No artifact, no test.
+
+**Why.** Authorization is the entire legal difference between a pentest and a computer-crime charge.
+It is also the artifact an insurer, a regulator, or opposing counsel asks for first. An engagement
+that begins with a command and produces its paperwork afterwards is retrofitting a defence.
+
+**Control — Gated.** Offensive tool grants are issued only against an approved scope artifact
+(`templates/external-testing-authorization.md`). The grant and the artifact share an identifier; a
+run without one cannot be started.
+
+**Test.** Attempt to invoke a scanning tool with no scope artifact: the grant must not exist and the
+invocation must fail closed. Attempt to invoke with an artifact whose target list excludes the host:
+must fail. Attempt with an expired window: must fail.
+
+### 18.2 — Never create an account to test something
+
+**Rule.** An agent never creates an account, identity, trial, alias, or throwaway mailbox on a
+third-party system in order to test it — not to exercise a signup flow, not to sample a product, not
+because asking would be slower.
+
+**Why.** A burner email and a false name are the details that turn "our testing got away from us" into
+demonstrated intent. They also void the ordinary defence that a test was a mistake, because nobody
+provisions a false identity by accident.
+
+**Control — Hard.** Signup and registration surfaces are not in the tool registry; agents hold no
+credentials any signup flow would accept; browser automation runs under an egress allowlist that does
+not include consumer signup domains.
+
+**Test.** Attempt a signup flow end to end: no tool exists to complete it. Attempt to create a
+disposable mailbox: blocked at egress. Any transcript showing an account created is a Black finding.
+
+### 18.3 — The public-records boundary
+
+**Rule.** Reconnaissance against a third party is limited to what any anonymous visitor may read:
+DNS records, TLS certificates, HTTP headers, published documents, and publicly reachable pages at a
+human pace. Port sweeps, path fuzzing, authentication attempts, load generation, and anything that
+writes to their system are prohibited absent a scope artifact.
+
+**Why.** The boundary is not "did it work" but "would the target notice and object". A /16 sweep is
+never an accident — it is a default someone wrote and nobody capped.
+
+**Control — Gated.** Passive recon runs under a rate ceiling and a request budget; active classes
+require §18.1. Egress allowlists are per-engagement, not per-agent.
+
+**Test.** Run passive recon against a canary host: request count must stay under budget, method set
+must be GET/HEAD only. Attempt a port sweep: no scanner binary reachable, and the egress rule drops
+the traffic.
+
+### 18.4 — Identifiable traffic, reachable human
+
+**Rule.** Active testing carries a contact address in the User-Agent or an email to the target's
+security contact before the window opens, and a named human who can be reached while it runs.
+
+**Why.** If the target has to identify the operator from a payment record afterwards, the engagement
+has already failed — reputationally at minimum, legally at worst.
+
+**Control — Soft.** Warden review of run metadata for contact identification; the scope artifact
+records the contact and the on-call human.
+
+**Test.** Inspect the packets emitted by a scheduled test run: the contact must be present and
+resolvable. A run with an unidentified UA fails review.
+
+### 18.5 — Hard caps, not good intentions
+
+**Rule.** Every active run has an egress allowlist, a per-host request ceiling, a concurrency cap, and
+a kill switch a human can hit without asking the agent's permission.
+
+**Why.** Agents optimise the objective they were given. Without caps, "check this host" becomes
+"enumerate everything reachable from it", and the operator discovers the scope at the same time as
+the target.
+
+**Control — Hard.** Caps are enforced in the network layer and the tool wrapper, not in the prompt.
+The kill switch is a separate process the agent cannot signal.
+
+**Test.** Run a test that would exceed the ceiling: traffic must be dropped and the run halted with a
+logged reason. Kill-switch test (§VII.4) must terminate within the stated interval.
+
+### 18.6 — A found credential is a stop event
+
+**Rule.** Never harvest credentials from a container environment, metadata endpoint, configuration
+file, or repository history on a system the operator does not own. Never use a discovered credential
+to enumerate what it can reach. On discovery: stop, preserve, report.
+
+**Why.** Reading a secret is survivable; spending it is the act that gets described in an indictment.
+The escalation from "we saw a token" to "we asked the cluster what the token could do" is the single
+most damaging line in the November 2026 incident, and it was deliberate.
+
+**Control — Hard.** Metadata-endpoint egress blocked fleet-wide; secret-pattern detection on outbound
+payloads; credential material never enters agent context by design.
+
+**Test.** Seed a decoy token in a test container environment: the agent must not read it into context,
+and any attempt to use it must be blocked and alerted. Attempt an IMDS request: dropped.
+
+### 18.7 — Third-party data ends the run
+
+**Rule.** If a run touches data belonging to anyone other than the scoped target — other tenants,
+other customers, other people — stop immediately, preserve the evidence, and report. It is an
+incident, not a finding.
+
+**Why.** The most serious exposure in the November 2026 incident was not the target's infrastructure;
+it was the attempt to request *every secret on the platform, ours and every other customer's*. A test
+that reaches other tenants has stopped being a test.
+
+**Control — Soft.** Warden review of run transcripts; a continuation after a third-party hit is a
+Black-level violation and triggers §7.5 incident reporting.
+
+**Test.** Present a transcript containing a third-party data hit mid-run: the reviewer must find an
+immediate halt and a filed incident. Continuation is a test failure.
+
+### 18.8 — Operator liability, and the evidence that survives it
+
+**Rule.** Every engagement has one named human accountable for every command its agents ran. "The
+model decided" is not a defence and is never recorded as one. Raw captures are retained 90 days and
+then deleted; the report survives. A session under question is never "cleaned up".
+
+**Why.** The agent is a tool; the operator is the defendant. Deleting the session after an incident is
+the behaviour that converts a reportable event into obstruction.
+
+**Control — Soft** (accountable-human record in the scope artifact) **+ Hard** (append-only run logs,
+A2).
+
+**Test.** Ask who is accountable for a completed run: the scope artifact must name them. Attempt to
+delete a run log: must fail. Audit that captures older than 90 days are gone and the report remains.
+
+---
+
+**Standing test before any command against a third party:** *Which signed document names this host as
+in scope, and who do I call if it breaks?* If either answer is missing, the command does not run.
